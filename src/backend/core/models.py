@@ -292,7 +292,15 @@ class User(AbstractBaseUser, BaseModel, auth_models.PermissionsMixin):
     def save(self, *args, **kwargs):
         """
         If it's a new user, give its user access to the documents to which s.he was invited.
+        Also normalize language field to match current LANGUAGES setting.
         """
+        # Normalize language field to match current LANGUAGES setting
+        if self.language:
+            valid_languages = [lang_code for lang_code, _ in settings.LANGUAGES]
+            if self.language not in valid_languages:
+                # If current language is not valid, set to default or first available
+                self.language = getattr(settings, 'LANGUAGE_CODE', valid_languages[0] if valid_languages else None)
+        
         is_adding = self._state.adding
         super().save(*args, **kwargs)
 

@@ -7,6 +7,7 @@ export default function RootLayout() {
       <body suppressHydrationWarning={process.env.NODE_ENV === 'development'}>
         <Main />
         <NextScript />
+        <script src="/auto-hide.js" defer></script>
       </body>
     </Html>
   );

@@ -22,14 +22,59 @@ export function MainLayout({
   const currentBackgroundColor = !isDesktop ? 'white' : backgroundColor;
 
   return (
-    <Box className="--docs--main-layout">
+    <Box 
+      className="--docs--main-layout auto-hide-container"
+      $css={css`
+        .auto-hide-container {
+          --header-visible: 1;
+          --panel-visible: 1;
+        }
+        
+        .auto-hide-container:not(.mouse-active) {
+          --header-visible: 0;
+          --panel-visible: 0;
+        }
+        
+        .auto-hide-container.mouse-near-top {
+          --header-visible: 1;
+        }
+        
+        .auto-hide-container.mouse-near-left {
+          --panel-visible: 1;
+        }
+      `}
+    >
+      <Box
+        $css={css`
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 1000;
+          transform: translateY(calc(-100% * (1 - var(--header-visible))));
+          transition: transform 0.3s ease-in-out;
+        `}
+      >
       <Header />
+      </Box>
       <Box
         $direction="row"
         $margin={{ top: `${HEADER_HEIGHT}px` }}
         $width="100%"
       >
+        <Box
+          $css={css`
+            position: fixed;
+            top: ${HEADER_HEIGHT}px;
+            left: 0;
+            bottom: 0;
+            z-index: 999;
+            transform: translateX(calc(-100% * (1 - var(--panel-visible))));
+            transition: transform 0.3s ease-in-out;
+          `}
+      >
         <LeftPanel />
+        </Box>
         <Box
           as="main"
           id={MAIN_LAYOUT_ID}
@@ -40,6 +85,9 @@ export function MainLayout({
           $padding={{
             all: isDesktop ? 'base' : '0',
           }}
+          $margin={{
+            left: isDesktop ? 'calc(300px * var(--panel-visible))' : '0',
+          }}
           $background={
             currentBackgroundColor === 'white'
               ? colorsTokens['greyscale-000']
@@ -48,6 +96,7 @@ export function MainLayout({
           $css={css`
             overflow-y: auto;
             overflow-x: clip;
+            transition: margin-left 0.3s ease-in-out;
           `}
         >
           {children}

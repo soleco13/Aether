@@ -2,23 +2,23 @@
   "footer": {
     "default": {
       "logo": {
-        "src": "/assets/icon-docs.svg",
-        "width": "54px",
-        "alt": "Docs Logo",
-        "withTitle": true
+        "src": "/assets/aether-logo.svg",
+        "width": "120px",
+        "alt": "Aether Логотип",
+        "withTitle": false
       },
       "externalLinks": [
         {
-          "label": "Github",
+          "label": "GitHub",
           "href": "https://github.com/suitenumerique/docs/"
         },
         {
-          "label": "DINUM",
-          "href": "https://www.numerique.gouv.fr/dinum/"
+          "label": "Документация",
+          "href": "https://github.com/suitenumerique/docs/tree/main/docs"
         },
         {
-          "label": "ZenDiS",
-          "href": "https://zendis.de/"
+          "label": "Сообщество",
+          "href": "https://matrix.to/#/#docs-official:matrix.org"
         },
         {
           "label": "BlockNote.js",
@@ -26,104 +26,84 @@
         }
       ],
       "bottomInformation": {
-        "label": "Unless otherwise stated, all content on this site is under",
+        "label": "Если не указано иное, весь контент данного сайта находится под",
         "link": {
-          "label": "licence etalab-2.0",
-          "href": "https://github.com/etalab/licence-ouverte/blob/master/LO.md"
-        }
-      }
-    },
-    "en": {
-      "legalLinks": [
-        {
-          "label": "Legal Notice",
-          "href": "#"
-        },
-        {
-          "label": "Personal data and cookies",
-          "href": "#"
-        },
-        {
-          "label": "Accessibility",
-          "href": "#"
-        }
-      ],
-      "bottomInformation": {
-        "label": "Unless otherwise stated, all content on this site is under",
-        "link": {
-          "label": "licence MIT",
+          "label": "лицензией MIT",
           "href": "https://github.com/suitenumerique/docs/blob/main/LICENSE"
         }
       }
     },
-    "fr": {
+    "ru": {
       "legalLinks": [
         {
-          "label": "Mentions légales",
+          "label": "Правовая информация",
           "href": "#"
         },
         {
-          "label": "Données personnelles et cookies",
+          "label": "Персональные данные и куки",
           "href": "#"
         },
         {
-          "label": "Accessibilité",
+          "label": "Доступность",
           "href": "#"
         }
       ],
       "bottomInformation": {
-        "label": "Sauf mention contraire, tout le contenu de ce site est sous",
+        "label": "Если не указано иное, весь контент данного сайта находится под",
         "link": {
-          "label": "licence MIT",
-          "href": "https://github.com/suitenumerique/docs/blob/main/LICENSE"
-        }
-      }
-    },
-    "de": {
-      "legalLinks": [
-        {
-          "label": "Impressum",
-          "href": "#"
-        },
-        {
-          "label": "Personenbezogene Daten und Cookies",
-          "href": "#"
-        },
-        {
-          "label": "Barrierefreiheit",
-          "href": "#"
-        }
-      ],
-      "bottomInformation": {
-        "label": "Sofern nicht anders angegeben, steht der gesamte Inhalt dieser Website unter",
-        "link": {
-          "label": "licence MIT",
-          "href": "https://github.com/suitenumerique/docs/blob/main/LICENSE"
-        }
-      }
-    },
-    "nl": {
-      "legalLinks": [
-        {
-          "label": "Wettelijke bepalingen",
-          "href": "#"
-        },
-        {
-          "label": "Persoonlijke gegevens en cookies",
-          "href": "#"
-        },
-        {
-          "label": "Toegankelijkheid",
-          "href": "#"
-        }
-      ],
-      "bottomInformation": {
-        "label": "Tenzij anders vermeld, is alle inhoud van deze site ondergebracht onder",
-        "link": {
-          "label": "licence MIT",
+          "label": "лицензией MIT",
           "href": "https://github.com/suitenumerique/docs/blob/main/LICENSE"
         }
       }
     }
+    },
+  "theme": {
+    "logo": {
+      "src": "/assets/aether-logo.svg",
+      "alt": "Aether — Эфирная Коллаборация Документов",
+      "width": 120,
+      "height": 40
+    },
+    "colors": {
+      "primary": "#404040",
+      "secondary": "#808080",
+      "background": "#000000",
+      "text": "#c0c0c0"
+    },
+    "navigation": {
+      "footer": {
+        "links": [
+          {
+            "href": "https://github.com/suitenumerique/docs",
+            "title": "GitHub"
+          },
+          {
+            "href": "https://github.com/suitenumerique/docs/tree/main/docs",
+            "title": "Документация"
+          },
+        {
+            "href": "https://matrix.to/#/#docs-official:matrix.org",
+            "title": "Сообщество"
+          }
+        ],
+        "poweredBy": [
+        {
+            "href": "https://github.com/suitenumerique/docs",
+            "title": "Aether Project",
+            "src": "/assets/aether-logo.svg"
+        }
+        ]
+      }
+    },
+    "legal": {
+      "text": "Aether — это платформа для совместной работы с документами в реальном времени.",
+      "license": "Лицензировано под MIT License"
+    },
+    "languages": [
+      {
+        "code": "ru",
+        "label": "Русский"
+        }
+    ]
   }
 }

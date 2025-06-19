@@ -1,12 +1,23 @@
 import { useTranslation } from 'react-i18next';
-import { css } from 'styled-components';
+import { styled } from 'styled-components';
 
 import { Box, Text } from '@/components/';
 import { useCunninghamTheme } from '@/cunningham';
 
+// Styled компоненты
+const TitleText = styled(Text)`
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+`;
+
+const BetaText = styled(Text)`
+  line-height: 9px;
+`;
+
 export const Title = () => {
   const { t } = useTranslation();
-  const { spacingsTokens, colorsTokens, componentTokens } =
+  const { spacingsTokens, componentTokens } =
     useCunninghamTheme();
   const isBeta = componentTokens['beta'];
 
@@ -17,17 +28,17 @@ export const Title = () => {
       $gap={spacingsTokens['2xs']}
       className="--docs--title"
     >
-      <Text
+      <TitleText
         $margin="none"
         as="h2"
-        $color={colorsTokens['primary-text']}
+        $color="#c0c0c0"
         $zIndex={1}
         $size="1.375rem"
       >
-        {t('Docs')}
-      </Text>
+        Aether
+      </TitleText>
       {isBeta && (
-        <Text
+        <BetaText
           $padding={{
             horizontal: '6px',
             vertical: '4px',
@@ -37,16 +48,13 @@ export const Title = () => {
           $variation="500"
           $weight="bold"
           $radius="12px"
-          $css={css`
-            line-height: 9px;
-          `}
           $width="40px"
           $height="16px"
           $background="#ECECFF"
           $color="#5958D3"
         >
           BETA
-        </Text>
+        </BetaText>
       )}
     </Box>
   );

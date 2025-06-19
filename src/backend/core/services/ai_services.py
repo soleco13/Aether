@@ -66,20 +66,25 @@ class AIService:
 
     def call_ai_api(self, system_content, text):
         """Helper method to call the OpenAI API and process the response."""
-        response = self.client.chat.completions.create(
-            model=settings.AI_MODEL,
-            messages=[
-                {"role": "system", "content": system_content},
-                {"role": "user", "content": text},
-            ],
-        )
+        try:
+            response = self.client.chat.completions.create(
+                model=settings.AI_MODEL,
+                messages=[
+                    {"role": "system", "content": system_content},
+                    {"role": "user", "content": text},
+                ],
+                max_tokens=1500,
+                temperature=0.3,
+            )
 
-        content = response.choices[0].message.content
+            content = response.choices[0].message.content
 
-        if not content:
-            raise RuntimeError("AI response does not contain an answer")
+            if not content:
+                raise RuntimeError("AI response does not contain an answer")
 
-        return {"answer": content}
+            return {"answer": content}
+        except Exception as e:
+            raise RuntimeError(f"AI API call failed: {str(e)}")
 
     def transform(self, text, action):
         """Transform text based on specified action."""

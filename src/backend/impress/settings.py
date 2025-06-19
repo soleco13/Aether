@@ -220,9 +220,9 @@ class Base(Configuration):
     # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
     # Languages
-    LANGUAGE_CODE = values.Value("en-us")
+    LANGUAGE_CODE = values.Value("ru-ru")
     # cookie & language is set from frontend
-    LANGUAGE_COOKIE_NAME = "docs_language"
+    LANGUAGE_COOKIE_NAME = "aether_language"
     LANGUAGE_COOKIE_PATH = "/"
 
     DRF_NESTED_MULTIPART_PARSER = {
@@ -235,11 +235,8 @@ class Base(Configuration):
     # fallback/default languages throughout the app.
     LANGUAGES = values.SingleNestedTupleValue(
         (
+            ("ru-ru", "Русский"),
             ("en-us", "English"),
-            ("fr-fr", "Français"),
-            ("de-de", "Deutsch"),
-            ("nl-nl", "Nederlands"),
-            ("es-es", "Español"),
         )
     )
 
@@ -323,6 +320,22 @@ class Base(Configuration):
     # Cache
     CACHES = {
         "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+        "session": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": values.Value(
+                "redis://redis:6379/2",
+                environ_name="REDIS_SESSION_URL",
+                environ_prefix=None,
+            ),
+            "TIMEOUT": values.IntegerValue(
+                60 * 60 * 12,  # 12 hours
+                environ_name="CACHES_SESSION_TIMEOUT",
+                environ_prefix=None,
+            ),
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+        },
     }
 
     REST_FRAMEWORK = {
@@ -466,9 +479,21 @@ class Base(Configuration):
 
     # Session
     SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-    SESSION_CACHE_ALIAS = "default"
+    SESSION_CACHE_ALIAS = "session"
     SESSION_COOKIE_AGE = values.PositiveIntegerValue(
         default=60 * 60 * 12, environ_name="SESSION_COOKIE_AGE", environ_prefix=None
+    )
+    SESSION_COOKIE_NAME = values.Value(
+        default="impress_sessionid", environ_name="SESSION_COOKIE_NAME", environ_prefix=None
+    )
+    SESSION_COOKIE_SECURE = values.BooleanValue(
+        default=False, environ_name="SESSION_COOKIE_SECURE", environ_prefix=None
+    )
+    SESSION_COOKIE_HTTPONLY = values.BooleanValue(
+        default=True, environ_name="SESSION_COOKIE_HTTPONLY", environ_prefix=None
+    )
+    SESSION_COOKIE_SAMESITE = values.Value(
+        default='Lax', environ_name="SESSION_COOKIE_SAMESITE", environ_prefix=None
     )
 
     # OIDC - Authorization Code Flow
@@ -815,6 +840,11 @@ class Development(Base):
 
     USE_SWAGGER = True
     SESSION_CACHE_ALIAS = "session"
+    SESSION_COOKIE_AGE = 60 * 60 * 12  # 12 hours
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.dummy.DummyCache",
@@ -827,7 +857,7 @@ class Development(Base):
                 environ_prefix=None,
             ),
             "TIMEOUT": values.IntegerValue(
-                30,  # timeout in seconds
+                60 * 60 * 12,  # 12 hours timeout
                 environ_name="CACHES_DEFAULT_TIMEOUT",
                 environ_prefix=None,
             ),

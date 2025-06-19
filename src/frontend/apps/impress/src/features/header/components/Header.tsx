@@ -1,11 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { css } from 'styled-components';
+import { styled } from 'styled-components';
 
-import IconDocs from '@/assets/icons/icon-docs.svg';
 import { Box, StyledLink } from '@/components/';
 import { useCunninghamTheme } from '@/cunningham';
-import { ButtonLogin } from '@/features/auth';
-import { LanguagePicker } from '@/features/language';
+import { ButtonLogin, ButtonProfile } from '@/features/auth';
 import { useResponsiveStore } from '@/stores';
 
 import { HEADER_HEIGHT } from '../conf';
@@ -14,15 +12,8 @@ import { ButtonTogglePanel } from './ButtonTogglePanel';
 import { LaGaufre } from './LaGaufre';
 import { Title } from './Title';
 
-export const Header = () => {
-  const { t } = useTranslation();
-  const { spacingsTokens, colorsTokens } = useCunninghamTheme();
-  const { isDesktop } = useResponsiveStore();
-
-  return (
-    <Box
-      as="header"
-      $css={css`
+// Styled компоненты
+const HeaderContainer = styled(Box)<{ $padding: string }>`
         position: fixed;
         top: 0;
         left: 0;
@@ -32,10 +23,40 @@ export const Header = () => {
         align-items: center;
         justify-content: space-between;
         height: ${HEADER_HEIGHT}px;
-        padding: 0 ${spacingsTokens['base']};
-        background-color: ${colorsTokens['greyscale-000']};
-        border-bottom: 1px solid ${colorsTokens['greyscale-200']};
-      `}
+  padding: 0 ${props => props.$padding};
+  background-color: #404040;
+  border-bottom: 1px solid #808080;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+`;
+
+const LogoBox = styled(Box)`
+  background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(192, 192, 192, 0.2);
+  }
+  
+  &::before {
+    content: 'Æ';
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: #000000;
+    font-family: 'Inter', sans-serif;
+  }
+`;
+
+export const Header = () => {
+  const { t } = useTranslation();
+  const { spacingsTokens } = useCunninghamTheme();
+  const { isDesktop } = useResponsiveStore();
+
+  return (
+    <HeaderContainer
+      as="header"
+      $padding={spacingsTokens['base']}
       className="--docs--header"
     >
       {!isDesktop && <ButtonTogglePanel />}
@@ -48,10 +69,12 @@ export const Header = () => {
           $height="fit-content"
           $margin={{ top: 'auto' }}
         >
-          <IconDocs
-            aria-label={t('Docs Logo')}
-            width={32}
-            color={colorsTokens['primary-text']}
+          {/* Логотип Aether */}
+          <LogoBox
+            $width="32px"
+            $height="32px"
+            $justify="center"
+            $align="center"
           />
           <Title />
         </Box>
@@ -62,11 +85,11 @@ export const Header = () => {
         </Box>
       ) : (
         <Box $align="center" $gap={spacingsTokens['sm']} $direction="row">
+          <ButtonProfile />
           <ButtonLogin />
-          <LanguagePicker />
           <LaGaufre />
         </Box>
       )}
-    </Box>
+    </HeaderContainer>
   );
 };

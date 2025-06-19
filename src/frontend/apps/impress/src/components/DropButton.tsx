@@ -76,7 +76,7 @@ export const DropButton = ({
           font-family: ${font};
           ${buttonCss};
         `}
-        className="--docs--drop-button"
+        className="--aether--drop-button"
       >
         {button}
       </StyledButton>
@@ -85,7 +85,7 @@ export const DropButton = ({
         triggerRef={triggerRef}
         isOpen={isLocalOpen}
         onOpenChange={onOpenChangeHandler}
-        className="--docs--drop-button-popover"
+        className="--aether--drop-button-popover"
       >
         {children}
       </StyledPopover>

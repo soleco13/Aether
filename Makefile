@@ -35,11 +35,21 @@ DB_PORT            = 5432
 
 # -- Docker
 # Get the current user ID to use for docker run and docker exec commands
-DOCKER_UID          = $(shell id -u)
-DOCKER_GID          = $(shell id -g)
+ifeq ($(OS),Windows_NT)
+	DOCKER_UID = 1000
+	DOCKER_GID = 1000
+else
+	DOCKER_UID = $(shell id -u)
+	DOCKER_GID = $(shell id -g)
+endif
 DOCKER_USER         = $(DOCKER_UID):$(DOCKER_GID)
-COMPOSE             = DOCKER_USER=$(DOCKER_USER) docker compose
-COMPOSE_E2E         = DOCKER_USER=$(DOCKER_USER) docker compose -f compose.yml -f compose-e2e.yml
+ifeq ($(OS),Windows_NT)
+	COMPOSE             = cmd /c "set DOCKER_USER=$(DOCKER_USER) && docker compose"
+	COMPOSE_E2E         = cmd /c "set DOCKER_USER=$(DOCKER_USER) && docker compose -f compose.yml -f compose-e2e.yml"
+else
+	COMPOSE             = DOCKER_USER=$(DOCKER_USER) docker compose
+	COMPOSE_E2E         = DOCKER_USER=$(DOCKER_USER) docker compose -f compose.yml -f compose-e2e.yml
+endif
 COMPOSE_EXEC        = $(COMPOSE) exec
 COMPOSE_EXEC_APP    = $(COMPOSE_EXEC) app-dev
 COMPOSE_RUN         = $(COMPOSE) run --rm
@@ -60,10 +70,18 @@ PATH_FRONT_IMPRESS  = $(PATH_FRONT)/apps/impress
 default: help
 
 data/media:
+ifeq ($(OS),Windows_NT)
+	@if not exist "data\media" mkdir "data\media"
+else
 	@mkdir -p data/media
+endif
 
 data/static:
+ifeq ($(OS),Windows_NT)
+	@if not exist "data\static" mkdir "data\static"
+else
 	@mkdir -p data/static
+endif
 
 # -- Project
 
@@ -259,18 +277,34 @@ resetdb: ## flush database and create a superuser "admin"
 .PHONY: resetdb
 
 env.d/development/common:
+ifeq ($(OS),Windows_NT)
+	@if not exist "env.d\development\common" copy "env.d\development\common.dist" "env.d\development\common"
+else
 	cp -n env.d/development/common.dist env.d/development/common
+endif
 
 env.d/development/postgresql:
+ifeq ($(OS),Windows_NT)
+	@if not exist "env.d\development\postgresql" copy "env.d\development\postgresql.dist" "env.d\development\postgresql"
+else
 	cp -n env.d/development/postgresql.dist env.d/development/postgresql
+endif
 
 env.d/development/kc_postgresql:
+ifeq ($(OS),Windows_NT)
+	@if not exist "env.d\development\kc_postgresql" copy "env.d\development\kc_postgresql.dist" "env.d\development\kc_postgresql"
+else
 	cp -n env.d/development/kc_postgresql.dist env.d/development/kc_postgresql
+endif
 
 # -- Internationalization
 
 env.d/development/crowdin:
+ifeq ($(OS),Windows_NT)
+	@if not exist "env.d\development\crowdin" copy "env.d\development\crowdin.dist" "env.d\development\crowdin"
+else
 	cp -n env.d/development/crowdin.dist env.d/development/crowdin
+endif
 
 crowdin-download: ## Download translated message from crowdin
 	@$(COMPOSE_RUN_CROWDIN) download -c crowdin/config.yml

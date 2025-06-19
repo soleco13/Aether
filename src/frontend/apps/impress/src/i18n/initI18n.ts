@@ -12,22 +12,14 @@ if (!isInitialized && !i18next.isInitialized) {
   isInitialized = true;
 
   i18next
-    .use(LanguageDetector)
     .use(initReactI18next)
     .init({
-      resources,
-      fallbackLng: 'en',
-      debug: false,
-      detection: {
-        order: ['cookie', 'navigator'],
-        caches: ['cookie'],
-        lookupCookie: 'docs_language',
-        cookieMinutes: 525600,
-        cookieOptions: {
-          path: '/',
-          sameSite: 'lax',
-        },
+      resources: {
+        ru: resources.ru
       },
+      lng: 'ru',
+      fallbackLng: 'ru',
+      debug: false,
       interpolation: {
         escapeValue: false,
       },

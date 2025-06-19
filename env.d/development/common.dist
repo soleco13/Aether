@@ -51,9 +51,9 @@ OIDC_AUTH_REQUEST_EXTRA_PARAMS={"acr_values": "eidas1"}
 
 # AI
 AI_FEATURE_ENABLED=true
-AI_BASE_URL=https://openaiendpoint.com
-AI_API_KEY=password
-AI_MODEL=llama
+AI_BASE_URL=https://openrouter.ai/api/v1
+AI_API_KEY=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
+AI_MODEL=deepseek/deepseek-r1-0528:free
 
 # Collaboration
 COLLABORATION_API_URL=http://y-provider:4444/collaboration/api/

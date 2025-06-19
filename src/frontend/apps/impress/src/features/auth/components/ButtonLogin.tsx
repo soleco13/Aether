@@ -16,11 +16,32 @@ export const ButtonLogin = () => {
     return (
       <Button
         onClick={() => gotoLogin()}
-        color="primary-text"
+        color="primary"
         aria-label={t('Login')}
         className="--docs--button-login"
+        $css={css`
+          background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%);
+          color: #000000;
+          border: none;
+          font-family: 'Inter', sans-serif;
+          font-weight: 600;
+          border-radius: 8px;
+          padding: 12px 24px;
+          transition: all 0.3s ease;
+          font-size: 14px;
+          
+          &:hover {
+            background: linear-gradient(135deg, #d4d4d8 0%, #a1a1aa 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(192, 192, 192, 0.3);
+          }
+          
+          &:active {
+            transform: translateY(0);
+          }
+        `}
       >
-        {t('Login')}
+        Войти
       </Button>
     );
   }
@@ -28,11 +49,28 @@ export const ButtonLogin = () => {
   return (
     <Button
       onClick={gotoLogout}
-      color="primary-text"
+      color="tertiary"
       aria-label={t('Logout')}
       className="--docs--button-logout"
+      $css={css`
+        background: transparent;
+        color: #c0c0c0;
+        border: 1px solid #404040;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        border-radius: 8px;
+        padding: 8px 16px;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        
+        &:hover {
+          background: #404040;
+          color: #ffffff;
+          border-color: #808080;
+        }
+      `}
     >
-      {t('Logout')}
+      Выйти
     </Button>
   );
 };
@@ -45,15 +83,33 @@ export const ProConnectButton = () => {
       onClick={() => gotoLogin()}
       aria-label={t('Proconnect Login')}
       $css={css`
-        background-color: var(--c--theme--colors--primary-text);
+        background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%);
+        color: #000000;
+        border: none;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 16px 32px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        
         &:hover {
-          background-color: var(--c--theme--colors--primary-action);
+          background: linear-gradient(135deg, #d4d4d8 0%, #a1a1aa 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(192, 192, 192, 0.3);
+        }
+        
+        &:active {
+          transform: translateY(0);
         }
       `}
-      $radius="4px"
+      $radius="8px"
       className="--docs--proconnect-button"
     >
       <ProConnectImg />
+      <span>Войти через ProConnect</span>
     </BoxButton>
   );
 };
