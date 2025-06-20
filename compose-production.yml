@@ -54,7 +54,7 @@ services:
     entrypoint: >
       sh -c "
       /usr/bin/mc alias set aetherminio http://minio:9000 aether_minio aether_minio_password_2025 && \
-      /usr/bin/mc mb aetherminio/impress-media-storage && \
+      (/usr/bin/mc mb aetherminio/impress-media-storage || echo 'Bucket already exists, continuing...') && \
       /usr/bin/mc version enable aetherminio/impress-media-storage && \
       exit 0;"
     networks:
