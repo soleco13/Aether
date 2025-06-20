@@ -900,52 +900,53 @@ class ContinuousIntegration(Test):
 
 class Production(Base):
     """
-    Production environment settings
-
-    You must define the ALLOWED_HOSTS environment variable in Production
-    configuration (and derived configurations):
-    ALLOWED_HOSTS=["foo.com", "foo.fr"]
+    Production environment settings for Aether
+    Simplified for easy deployment without extra security complexity
     """
 
-    # Security
-    # Add allowed host from environment variables.
-    # The machine hostname is added by default,
-    # it makes the application pingable by a load balancer on the same machine by example
+    # Security - упрощенные настройки для деплоя
     ALLOWED_HOSTS = [
-        *values.ListValue([], environ_name="ALLOWED_HOSTS"),
+        "aethers.ru",
+        "aetherhelp.store", 
+        "45.146.166.126",
+        "localhost",
+        "127.0.0.1",
         gethostbyname(gethostname()),
     ]
-    CSRF_TRUSTED_ORIGINS = values.ListValue([])
+    
+    CSRF_TRUSTED_ORIGINS = [
+        "https://aethers.ru",
+        "https://aetherhelp.store",
+        "http://45.146.166.126",
+        "http://localhost:8000",
+        "http://localhost:3000",
+    ]
+    
+    CORS_ALLOWED_ORIGINS = [
+        "https://aethers.ru",
+        "https://aetherhelp.store", 
+        "http://45.146.166.126:3000",
+        "http://localhost:3000",
+    ]
+    
+    # Отключаем строгие SSL настройки для упрощения
+    SECURE_SSL_REDIRECT = False
+    SECURE_PROXY_SSL_HEADER = None
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_PRELOAD = False
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    
+    # Cookies без строгих требований к HTTPS
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    
+    # Базовые настройки безопасности
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-
-    # SECURE_PROXY_SSL_HEADER allows to fix the scheme in Django's HttpRequest
-    # object when your application is behind a reverse proxy.
-    #
-    # Keep this SECURE_PROXY_SSL_HEADER configuration only if :
-    # - your Django app is behind a proxy.
-    # - your proxy strips the X-Forwarded-Proto header from all incoming requests
-    # - Your proxy sets the X-Forwarded-Proto header and sends it to Django
-    #
-    # In other cases, you should comment the following line to avoid security issues.
-    # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    SECURE_HSTS_SECONDS = 60
-    SECURE_HSTS_PRELOAD = True
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_SSL_REDIRECT = True
-    SECURE_REDIRECT_EXEMPT = [
-        "^__lbheartbeat__",
-        "^__heartbeat__",
-    ]
-
-    # Modern browsers require to have the `secure` attribute on cookies with `Samesite=none`
-    CSRF_COOKIE_SECURE = True
-    SESSION_COOKIE_SECURE = True
-
-    # Privacy
     SECURE_REFERRER_POLICY = "same-origin"
-
+    
+    # Кэш для сессий и основной
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
@@ -954,21 +955,44 @@ class Production(Base):
                 environ_name="REDIS_URL",
                 environ_prefix=None,
             ),
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+        },
+        "session": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": values.Value(
+                "redis://redis:6379/2",
+                environ_name="REDIS_SESSION_URL",
+                environ_prefix=None,
+            ),
             "TIMEOUT": values.IntegerValue(
-                30,  # timeout in seconds
-                environ_name="CACHES_DEFAULT_TIMEOUT",
+                60 * 60 * 12,  # 12 hours
+                environ_name="CACHES_SESSION_TIMEOUT",
                 environ_prefix=None,
             ),
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
             },
-            "KEY_PREFIX": values.Value(
-                "docs",
-                environ_name="CACHES_KEY_PREFIX",
-                environ_prefix=None,
-            ),
         },
     }
+    
+    # Сессии
+    SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+    SESSION_CACHE_ALIAS = "session"
+    SESSION_COOKIE_NAME = "aether_sessionid"
+    SESSION_COOKIE_AGE = 60 * 60 * 12  # 12 hours
+    SESSION_COOKIE_HTTPONLY = True
+    
+    # Языки и локализация
+    LANGUAGE_CODE = "ru-ru"
+    LANGUAGE_COOKIE_NAME = "aether_language"
+    
+    # Статические файлы
+    STATIC_URL = "/static/"
+    STATIC_ROOT = "/data/static"
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = "/data/media"
 
 
 class Feature(Production):
