@@ -126,37 +126,42 @@ services:
     networks:
       - aether-network
 
-  frontend-production:
+  frontend-development:
     build: 
       context: .
       dockerfile: ./src/frontend/Dockerfile
-      target: frontend-production
+      target: impress-dev
       args:
         API_ORIGIN: "http://45.146.166.126:8071"
         NEXT_PUBLIC_API_ORIGIN: "http://45.146.166.126:8071"
         PUBLISH_AS_MIT: "false"
         SW_DEACTIVATED: "true"
-        DOCKER_USER: 1000
     restart: unless-stopped
-    image: aether:frontend-production
+    image: aether:frontend-development
     ports:
-      - "3000:8080"
+      - "3000:3000"
+    volumes:
+      - ./src/frontend:/home/frontend
+      - /home/frontend/node_modules
+      - /home/frontend/apps/impress/node_modules
     networks:
       - aether-network
 
-  y-provider-production:
+  y-provider-development:
     build: 
       context: .
       dockerfile: ./src/frontend/servers/y-provider/Dockerfile
-      target: y-provider
-      args:
-        DOCKER_USER: 1000
+      target: y-provider-development
     restart: unless-stopped
-    image: aether:y-provider-production
+    image: aether:y-provider-development
     env_file:
       - env.d/production/common
     ports:
       - "4444:4444"
+    volumes:
+      - ./src/frontend/:/home/frontend
+      - /home/frontend/node_modules
+      - /home/frontend/servers/y-provider/node_modules
     networks:
       - aether-network
 
