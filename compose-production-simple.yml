@@ -138,6 +138,8 @@ services:
         SW_DEACTIVATED: "true"
     restart: unless-stopped
     image: aether:frontend-development
+    environment:
+      - NEXT_PUBLIC_API_ORIGIN=http://45.146.166.126:8071
     ports:
       - "3000:3000"
     volumes:
