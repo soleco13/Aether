@@ -17,22 +17,22 @@ PYTHONPATH=/app
 # Mail
 DJANGO_EMAIL_BRAND_NAME="Aether"
 DJANGO_EMAIL_HOST="mailcatcher"
-DJANGO_EMAIL_LOGO_IMG="http://45.146.166.126/assets/aether-logo.svg"
+DJANGO_EMAIL_LOGO_IMG="https://45.146.166.126/assets/aether-logo.svg"
 DJANGO_EMAIL_PORT=1025
 
 # Backend url
-IMPRESS_BASE_URL="http://45.146.166.126:8071"
+IMPRESS_BASE_URL="https://45.146.166.126:8071"
 
 # Media
 STORAGES_STATICFILES_BACKEND=whitenoise.storage.CompressedManifestStaticFilesStorage
 AWS_S3_ENDPOINT_URL=http://minio:9000
 AWS_S3_ACCESS_KEY_ID=impress
 AWS_S3_SECRET_ACCESS_KEY=password
-MEDIA_BASE_URL=http://45.146.166.126:8083
+MEDIA_BASE_URL=https://45.146.166.126:8083
 
 # OIDC
 OIDC_OP_JWKS_ENDPOINT=http://nginx:8083/realms/impress/protocol/openid-connect/certs
-OIDC_OP_AUTHORIZATION_ENDPOINT=http://45.146.166.126:8083/realms/impress/protocol/openid-connect/auth
+OIDC_OP_AUTHORIZATION_ENDPOINT=https://45.146.166.126:8083/realms/impress/protocol/openid-connect/auth
 OIDC_OP_TOKEN_ENDPOINT=http://nginx:8083/realms/impress/protocol/openid-connect/token
 OIDC_OP_USER_ENDPOINT=http://nginx:8083/realms/impress/protocol/openid-connect/userinfo
 
@@ -41,11 +41,11 @@ OIDC_RP_CLIENT_SECRET=Aether-OIDC-Client-Secret-2025-Change-This-In-Real-Deploym
 OIDC_RP_SIGN_ALGO=RS256
 OIDC_RP_SCOPES="openid email"
 
-LOGIN_REDIRECT_URL=http://45.146.166.126:3000
-LOGIN_REDIRECT_URL_FAILURE=http://45.146.166.126:3000
-LOGOUT_REDIRECT_URL=http://45.146.166.126:3000
+LOGIN_REDIRECT_URL=https://45.146.166.126:3000
+LOGIN_REDIRECT_URL_FAILURE=https://45.146.166.126:3000
+LOGOUT_REDIRECT_URL=https://45.146.166.126:3000
 
-OIDC_REDIRECT_ALLOWED_HOSTS=["http://45.146.166.126:8083", "http://45.146.166.126:3000"]
+OIDC_REDIRECT_ALLOWED_HOSTS=["https://45.146.166.126:8083", "https://45.146.166.126:3000"]
 OIDC_AUTH_REQUEST_EXTRA_PARAMS={"acr_values": "eidas1"}
 
 # AI
@@ -57,9 +57,9 @@ AI_MODEL=deepseek/deepseek-r1-0528:free
 # Collaboration
 COLLABORATION_API_URL=http://y-provider:4444/collaboration/api/
 COLLABORATION_BACKEND_BASE_URL=http://app-prod:8000
-COLLABORATION_SERVER_ORIGIN=http://45.146.166.126:3000
+COLLABORATION_SERVER_ORIGIN=https://45.146.166.126:3000
 COLLABORATION_SERVER_SECRET=aether-collaboration-secret-2025
-COLLABORATION_WS_URL=ws://45.146.166.126:4444/collaboration/ws/
+COLLABORATION_WS_URL=wss://45.146.166.126:4444/collaboration/ws/
 
 Y_PROVIDER_API_BASE_URL=http://y-provider:4444/api/
 Y_PROVIDER_API_KEY=aether-yprovider-api-key-2025
@@ -68,15 +68,15 @@ Y_PROVIDER_API_KEY=aether-yprovider-api-key-2025
 REDIS_URL=redis://redis:6379/1
 REDIS_SESSION_URL=redis://redis:6379/2
 
-# Security Settings for Production (HTTP mode)
-SESSION_COOKIE_SECURE=False
-CSRF_COOKIE_SECURE=False
-SECURE_SSL_REDIRECT=False
-SECURE_PROXY_SSL_HEADER=
-SECURE_HSTS_SECONDS=0
-SECURE_HSTS_PRELOAD=False
-SECURE_HSTS_INCLUDE_SUBDOMAINS=False
+# SSL Security Settings for Production
+SESSION_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE=True
+SECURE_SSL_REDIRECT=True
+SECURE_PROXY_SSL_HEADER=("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_HSTS_SECONDS=31536000
+SECURE_HSTS_PRELOAD=True
+SECURE_HSTS_INCLUDE_SUBDOMAINS=True
 
-# CORS Settings for Production
-CORS_ALLOWED_ORIGINS=["http://45.146.166.126:3000", "http://localhost:3000"]
-CSRF_TRUSTED_ORIGINS=["http://45.146.166.126:3000", "http://45.146.166.126:8071", "http://localhost:3000"] 
+# CORS Settings for Production (HTTPS)
+CORS_ALLOWED_ORIGINS=["https://45.146.166.126:3000", "https://localhost:3000"]
+CSRF_TRUSTED_ORIGINS=["https://45.146.166.126:3000", "https://45.146.166.126:8071", "https://localhost:3000"] 

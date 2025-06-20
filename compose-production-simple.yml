@@ -132,14 +132,14 @@ services:
       dockerfile: ./src/frontend/Dockerfile
       target: impress-dev
       args:
-        API_ORIGIN: "http://45.146.166.126:8071"
-        NEXT_PUBLIC_API_ORIGIN: "http://45.146.166.126:8071"
+        API_ORIGIN: "https://45.146.166.126:8071"
+        NEXT_PUBLIC_API_ORIGIN: "https://45.146.166.126:8071"
         PUBLISH_AS_MIT: "false"
         SW_DEACTIVATED: "true"
     restart: unless-stopped
     image: aether:frontend-development
     environment:
-      - NEXT_PUBLIC_API_ORIGIN=http://45.146.166.126:8071
+      - NEXT_PUBLIC_API_ORIGIN=https://45.146.166.126:8071
     ports:
       - "3000:3000"
     volumes:
@@ -193,8 +193,8 @@ services:
       - --features=preview
       - --import-realm
       - --proxy=edge
-      - --hostname-url=http://45.146.166.126:8083
-      - --hostname-admin-url=http://45.146.166.126:8083/
+      - --hostname-url=https://45.146.166.126:8083
+      - --hostname-admin-url=https://45.146.166.126:8083/
       - --hostname-strict=false
       - --hostname-strict-https=false
       - --health-enabled=true

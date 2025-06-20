@@ -1,102 +1,63 @@
-# Aether Production Deployment Script for Windows PowerShell
-# Target: 45.146.166.126:3000 (HTTP)
+# Aether Production Deployment Script (SSL/HTTPS Version)
+# Этот скрипт развертывает полную production версию Aether с SSL поддержкой
 
-Write-Host "🚀 Запуск Aether в продакшн режиме" -ForegroundColor Green
-Write-Host "IP: 45.146.166.126 | Protocol: HTTP" -ForegroundColor Cyan
-Write-Host "=====================================`n" -ForegroundColor Green
+Write-Host "🚀 Запуск Aether Production с SSL поддержкой..." -ForegroundColor Green
+Write-Host "=============================================" -ForegroundColor Cyan
 
-# Проверка Docker
-Write-Host "🔍 Проверка Docker..."
-if (Get-Command docker -ErrorAction SilentlyContinue) {
-    Write-Host "✅ Docker найден" -ForegroundColor Green
-} else {
-    Write-Host "❌ Docker не найден. Установите Docker Desktop" -ForegroundColor Red
-    exit 1
-}
+# Остановка существующих контейнеров
+Write-Host "⏹️  Остановка существующих контейнеров..." -ForegroundColor Yellow
+docker-compose -f compose-production.yml down
 
-# Проверка Docker Compose
-Write-Host "🔍 Проверка Docker Compose..."
-if (Get-Command docker-compose -ErrorAction SilentlyContinue) {
-    Write-Host "✅ Docker Compose найден" -ForegroundColor Green
-} else {
-    Write-Host "❌ Docker Compose не найден" -ForegroundColor Red
-    exit 1
-}
+# Удаление старых образов для пересборки
+Write-Host "🗑️  Очистка старых образов..." -ForegroundColor Yellow
+docker image prune -f
 
-# Остановка dev сервисов
-Write-Host "`n🛑 Остановка development сервисов..."
-docker-compose down --remove-orphans 2>$null
+# Создание production образов
+Write-Host "🔨 Сборка production образов..." -ForegroundColor Yellow
+docker-compose -f compose-production.yml build --no-cache
 
-# Остановка production сервисов
-Write-Host "🛑 Остановка старых production сервисов..."
-docker-compose -f compose-production.yml down --remove-orphans 2>$null
+# Запуск всех сервисов
+Write-Host "🎯 Запуск всех сервисов..." -ForegroundColor Yellow
+docker-compose -f compose-production.yml up -d
 
-# Создание директорий
-Write-Host "`n📁 Создание директорий..."
-New-Item -ItemType Directory -Force -Path "data", "data/static", "data/media" | Out-Null
+# Проверка статуса сервисов
+Write-Host "⏳ Ожидание запуска сервисов..." -ForegroundColor Yellow
+Start-Sleep -Seconds 30
 
-# Выбор compose файла
-$ComposeFile = "compose-production.yml"
-if (!(Test-Path $ComposeFile)) {
-    Write-Host "⚠️ Основной compose файл не найден, использую альтернативный..." -ForegroundColor Yellow
-    $ComposeFile = "compose-production-simple.yml"
-}
-
-Write-Host "📋 Используется файл: $ComposeFile" -ForegroundColor Cyan
-
-# Запуск production
-Write-Host "`n🏗️ Сборка и запуск production..."
-docker-compose -f $ComposeFile up -d --build
-
-if ($LASTEXITCODE -eq 0) {
-    Write-Host "✅ Сборка завершена успешно!" -ForegroundColor Green
-} else {
-    Write-Host "❌ Ошибка при сборке. Пробуем альтернативный файл..." -ForegroundColor Yellow
-    $ComposeFile = "compose-production-simple.yml"
-    docker-compose -f $ComposeFile up -d --build
-}
-
-Write-Host "`n⏳ Ожидание запуска сервисов..."
-Start-Sleep 30
-
-Write-Host "`n📊 Статус сервисов:"
-docker-compose -f $ComposeFile ps
+Write-Host "📊 Статус сервисов:" -ForegroundColor Cyan
+docker-compose -f compose-production.yml ps
 
 # Проверка backend
-Write-Host "`n🔍 Проверка backend сервиса..."
-$BackendStatus = docker-compose -f $ComposeFile ps | Select-String "app-prod.*Up"
-if ($BackendStatus) {
-    Write-Host "✅ Backend запущен" -ForegroundColor Green
-    
-    Write-Host "`n🗄️ Миграции базы данных..."
-    docker-compose -f $ComposeFile exec -T app-prod python manage.py migrate
-
-    Write-Host "`n📦 Сбор статических файлов..."
-    docker-compose -f $ComposeFile exec -T app-prod python manage.py collectstatic --noinput
-    
-    Write-Host "`n👤 Создание суперпользователя admin..."
-    $CreateUserCommand = "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'admin@aether.local', 'admin')"
-    echo $CreateUserCommand | docker-compose -f $ComposeFile exec -T app-prod python manage.py shell
-} else {
-    Write-Host "❌ Backend не запущен. Проверьте логи:" -ForegroundColor Red
-    docker-compose -f $ComposeFile logs app-prod
+Write-Host "🔍 Проверка backend сервиса..." -ForegroundColor Yellow
+try {
+    Invoke-WebRequest -Uri "https://45.146.166.126:8071/api/v1.0/config/" -SkipCertificateCheck -Method GET -TimeoutSec 10 | Out-Null
+    Write-Host "✅ Backend доступен" -ForegroundColor Green
+} catch {
+    Write-Host "❌ Backend не доступен. Проверьте логи:" -ForegroundColor Red
+    Write-Host "   docker-compose -f compose-production.yml logs app-prod" -ForegroundColor Yellow
 }
 
-Write-Host "`n" -NoNewline
-Write-Host "✅ РАЗВЕРТЫВАНИЕ ЗАВЕРШЕНО!" -ForegroundColor Green
-Write-Host "`n🌐 Сервисы доступны по адресам:" -ForegroundColor Cyan
-Write-Host "   Frontend:  http://45.146.166.126:3000" -ForegroundColor White
-Write-Host "   Backend:   http://45.146.166.126:8071" -ForegroundColor White  
-Write-Host "   Keycloak:  http://45.146.166.126:8083" -ForegroundColor White
-Write-Host "   MinIO:     http://45.146.166.126:9001" -ForegroundColor White
-
-Write-Host "`n🔑 Учетные данные:" -ForegroundColor Cyan
-Write-Host "   Django Admin: admin / admin" -ForegroundColor White
-Write-Host "   Keycloak: admin / aether_keycloak_admin_2025" -ForegroundColor White
-Write-Host "   MinIO: aether_minio / aether_minio_password_2025" -ForegroundColor White
-
-Write-Host "`n📋 Полезные команды:" -ForegroundColor Cyan
-Write-Host "   Логи: docker-compose -f $ComposeFile logs -f" -ForegroundColor White
-Write-Host "   Стоп: docker-compose -f $ComposeFile down" -ForegroundColor White
-
-Write-Host "`n🎉 Aether готов к использованию!" -ForegroundColor Green 
+Write-Host ""
+Write-Host "✅ Развертывание завершено!" -ForegroundColor Green
+Write-Host ""
+Write-Host "🌐 Доступные сервисы (HTTPS):" -ForegroundColor Cyan
+Write-Host "   Frontend:  https://45.146.166.126:3000" -ForegroundColor White
+Write-Host "   Backend:   https://45.146.166.126:8071" -ForegroundColor White
+Write-Host "   Keycloak:  https://45.146.166.126:8083" -ForegroundColor White
+Write-Host "   MinIO:     https://45.146.166.126:9001" -ForegroundColor White
+Write-Host ""
+Write-Host "🔑 Учетные данные по умолчанию:" -ForegroundColor Cyan
+Write-Host "   Django Admin:   admin / admin" -ForegroundColor White
+Write-Host "   Keycloak Admin: admin / aether_keycloak_admin_2025" -ForegroundColor White
+Write-Host "   MinIO:          aether_minio / aether_minio_password_2025" -ForegroundColor White
+Write-Host "   Тестовый пользователь: impress / impress" -ForegroundColor White
+Write-Host ""
+Write-Host "⚠️  ВАЖНО: Убедитесь что на сервере настроен SSL сертификат!" -ForegroundColor Red
+Write-Host "          Без SSL сертификата сервисы не будут работать корректно." -ForegroundColor Yellow
+Write-Host ""
+Write-Host "📋 Полезные команды:" -ForegroundColor Cyan
+Write-Host "   Просмотр логов:     docker-compose -f compose-production.yml logs -f" -ForegroundColor White
+Write-Host "   Остановка:          docker-compose -f compose-production.yml down" -ForegroundColor White
+Write-Host "   Перезапуск:         docker-compose -f compose-production.yml restart" -ForegroundColor White
+Write-Host ""
+Write-Host "🎉 Aether готов к использованию с SSL!" -ForegroundColor Green 

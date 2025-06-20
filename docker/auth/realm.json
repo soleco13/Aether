@@ -688,19 +688,19 @@
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "secret": "ThisIsAnExampleKeyForDevPurposeOnly",
-                  "redirectUris": [
-              "http://45.146.166.126:8070/*",
-              "http://45.146.166.126:8071/*",
-              "http://45.146.166.126:3200/*",
-              "http://45.146.166.126:8088/*",
-              "http://45.146.166.126:3000/*"
-            ],
-            "webOrigins": [
-              "http://45.146.166.126:3200",
-              "http://45.146.166.126:8088",
-              "http://45.146.166.126:8070",
-              "http://45.146.166.126:3000"
-            ],
+      "redirectUris": [
+        "https://45.146.166.126:8070/*",
+        "https://45.146.166.126:8071/*",
+        "https://45.146.166.126:3200/*",
+        "https://45.146.166.126:8088/*",
+        "https://45.146.166.126:3000/*"
+      ],
+      "webOrigins": [
+        "https://45.146.166.126:3200",
+        "https://45.146.166.126:8088",
+        "https://45.146.166.126:8070",
+        "https://45.146.166.126:3000"
+      ],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -715,7 +715,7 @@
         "access.token.lifespan": "-1",
         "client.secret.creation.time": "1707820779",
         "user.info.response.signature.alg": "RS256",
-                      "post.logout.redirect.uris": "http://45.146.166.126:8070/*##http://45.146.166.126:3200/*##http://45.146.166.126:3000/*",
+        "post.logout.redirect.uris": "https://45.146.166.126:8070/*##https://45.146.166.126:3200/*##https://45.146.166.126:3000/*",
         "oauth2.device.authorization.grant.enabled": "false",
         "use.jwks.url": "false",
         "backchannel.logout.revoke.offline.tokens": "false",

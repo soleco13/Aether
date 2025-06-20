@@ -1,11 +1,10 @@
 #!/bin/bash
 
-# Aether Production Deployment Script
-# IP: 45.146.166.126
-# Protocol: HTTP
+# Aether Production Deployment Script (SSL/HTTPS Version)
+# Этот скрипт развертывает полную production версию Aether с SSL поддержкой
 
-echo "🚀 Запуск Aether в продакшн режиме на 45.146.166.126"
-echo "================================================="
+echo "🚀 Запуск Aether Production с SSL поддержкой..."
+echo "============================================="
 
 # Проверка требований
 if ! command -v docker &> /dev/null; then
@@ -18,77 +17,46 @@ if ! command -v docker-compose &> /dev/null; then
     exit 1
 fi
 
-# Остановка development сервисов если запущены
-echo "🛑 Остановка development сервисов..."
-docker-compose down 2>/dev/null || true
+# Остановка существующих контейнеров
+echo "⏹️  Остановка существующих контейнеров..."
+docker-compose -f compose-production.yml down
 
-# Очистка старых контейнеров и образов для production
-echo "🧹 Очистка старых production контейнеров..."
-docker-compose -f compose-production.yml down --remove-orphans 2>/dev/null || true
+# Удаление старых образов для пересборки
+echo "🗑️  Очистка старых образов..."
+docker image prune -f
 
-# Создание необходимых директорий
-echo "📁 Создание директорий для данных..."
-mkdir -p data/static
-mkdir -p data/media
+# Создание production образов
+echo "🔨 Сборка production образов..."
+docker-compose -f compose-production.yml build --no-cache
 
-# Выбор compose файла
-COMPOSE_FILE="compose-production.yml"
-if [ ! -f "$COMPOSE_FILE" ]; then
-    echo "⚠️ Основной compose файл не найден, использую альтернативный..."
-    COMPOSE_FILE="compose-production-simple.yml"
-fi
+# Запуск всех сервисов
+echo "🎯 Запуск всех сервисов..."
+docker-compose -f compose-production.yml up -d
 
-echo "📋 Используется файл: $COMPOSE_FILE"
-
-# Сборка и запуск production
-echo "🏗️ Сборка и запуск production сервисов..."
-docker-compose -f $COMPOSE_FILE up -d --build
-
-if [ $? -eq 0 ]; then
-    echo "✅ Сборка завершена успешно!"
-else
-    echo "❌ Ошибка при сборке. Пробуем альтернативный файл..."
-    COMPOSE_FILE="compose-production-simple.yml"
-    docker-compose -f $COMPOSE_FILE up -d --build
-fi
-
-# Ожидание запуска сервисов
+# Проверка статуса сервисов
 echo "⏳ Ожидание запуска сервисов..."
 sleep 30
 
-# Проверка статуса сервисов
 echo "📊 Статус сервисов:"
-docker-compose -f $COMPOSE_FILE ps
+docker-compose -f compose-production.yml ps
 
-# Проверка запуска backend
+# Проверка backend
 echo "🔍 Проверка backend сервиса..."
-if docker-compose -f $COMPOSE_FILE ps | grep -q "app-prod.*Up"; then
-    echo "✅ Backend запущен"
-    
-    # Выполнение миграций базы данных
-    echo "🗄️ Выполнение миграций базы данных..."
-    docker-compose -f $COMPOSE_FILE exec -T app-prod python manage.py migrate
-    
-    # Сбор статических файлов
-    echo "📦 Сбор статических файлов..."
-    docker-compose -f $COMPOSE_FILE exec -T app-prod python manage.py collectstatic --noinput
-    
-    # Создание суперпользователя (опционально)
-    echo "👤 Создание суперпользователя admin с паролем admin..."
-    echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'admin@aether.local', 'admin')" | docker-compose -f $COMPOSE_FILE exec -T app-prod python manage.py shell
+if curl -k -f https://45.146.166.126:8071/api/v1.0/config/ >/dev/null 2>&1; then
+    echo "✅ Backend доступен"
 else
-    echo "❌ Backend не запущен. Проверьте логи:"
-    docker-compose -f $COMPOSE_FILE logs app-prod
+    echo "❌ Backend не доступен. Проверьте логи:"
+    echo "   docker-compose -f compose-production.yml logs app-prod"
 fi
 
 echo ""
 echo "✅ Развертывание завершено!"
 echo ""
-echo "🌐 Доступные сервисы:"
-echo "   Frontend:  http://45.146.166.126:3000"
-echo "   Backend:   http://45.146.166.126:8071"
-echo "   Keycloak:  http://45.146.166.126:8083"
-echo "   MinIO:     http://45.146.166.126:9001"
+echo "🌐 Доступные сервисы (HTTPS):"
+echo "   Frontend:  https://45.146.166.126:3000"
+echo "   Backend:   https://45.146.166.126:8071"
+echo "   Keycloak:  https://45.146.166.126:8083"
+echo "   MinIO:     https://45.146.166.126:9001"
 echo ""
 echo "🔑 Учетные данные по умолчанию:"
 echo "   Django Admin:   admin / admin"
@@ -96,9 +64,12 @@ echo "   Keycloak Admin: admin / aether_keycloak_admin_2025"
 echo "   MinIO:          aether_minio / aether_minio_password_2025"
 echo "   Тестовый пользователь: impress / impress"
 echo ""
-echo "📋 Полезные команды:"
-echo "   Просмотр логов:     docker-compose -f $COMPOSE_FILE logs -f"
-echo "   Остановка:          docker-compose -f $COMPOSE_FILE down"
-echo "   Перезапуск:         docker-compose -f $COMPOSE_FILE restart"
+echo "⚠️  ВАЖНО: Убедитесь что на сервере настроен SSL сертификат!"
+echo "          Без SSL сертификата сервисы не будут работать корректно."
 echo ""
-echo "🎉 Aether готов к использованию!" 
+echo "📋 Полезные команды:"
+echo "   Просмотр логов:     docker-compose -f compose-production.yml logs -f"
+echo "   Остановка:          docker-compose -f compose-production.yml down"
+echo "   Перезапуск:         docker-compose -f compose-production.yml restart"
+echo ""
+echo "🎉 Aether готов к использованию с SSL!" 
