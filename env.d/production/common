@@ -68,12 +68,15 @@ Y_PROVIDER_API_KEY=aether-yprovider-api-key-2025
 REDIS_URL=redis://redis:6379/1
 REDIS_SESSION_URL=redis://redis:6379/2
 
-# Security Settings for Production
+# Security Settings for Production (HTTP mode)
 SESSION_COOKIE_SECURE=False
 CSRF_COOKIE_SECURE=False
 SECURE_SSL_REDIRECT=False
-SECURE_PROXY_SSL_HEADER= 
+SECURE_PROXY_SSL_HEADER=
+SECURE_HSTS_SECONDS=0
+SECURE_HSTS_PRELOAD=False
+SECURE_HSTS_INCLUDE_SUBDOMAINS=False
 
 # CORS Settings for Production
-CORS_ALLOWED_ORIGINS=http://45.146.166.126:3000,http://localhost:3000
-CSRF_TRUSTED_ORIGINS=http://45.146.166.126:3000,http://45.146.166.126:8071,http://localhost:3000 
+CORS_ALLOWED_ORIGINS=["http://45.146.166.126:3000", "http://localhost:3000"]
+CSRF_TRUSTED_ORIGINS=["http://45.146.166.126:3000", "http://45.146.166.126:8071", "http://localhost:3000"] 
