@@ -968,7 +968,75 @@ class Production(Base):
                 environ_prefix=None,
             ),
         },
+        "session": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": values.Value(
+                "redis://redis:6379/2",
+                environ_name="REDIS_SESSION_URL",
+                environ_prefix=None,
+            ),
+            "TIMEOUT": values.IntegerValue(
+                60 * 60 * 12,  # 12 hours
+                environ_name="CACHES_SESSION_TIMEOUT",
+                environ_prefix=None,
+            ),
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+        },
     }
+
+    # OIDC Configuration for Production - Keycloak
+    OIDC_OP_JWKS_ENDPOINT = values.Value(
+        default="https://aethers.ru/auth/realms/aether/protocol/openid_connect/certs",
+        environ_name="OIDC_OP_JWKS_ENDPOINT",
+        environ_prefix=None,
+    )
+    OIDC_OP_AUTHORIZATION_ENDPOINT = values.Value(
+        default="https://aethers.ru/auth/realms/aether/protocol/openid_connect/auth",
+        environ_name="OIDC_OP_AUTHORIZATION_ENDPOINT",
+        environ_prefix=None,
+    )
+    OIDC_OP_TOKEN_ENDPOINT = values.Value(
+        default="https://aethers.ru/auth/realms/aether/protocol/openid_connect/token",
+        environ_name="OIDC_OP_TOKEN_ENDPOINT",
+        environ_prefix=None,
+    )
+    OIDC_OP_USER_ENDPOINT = values.Value(
+        default="https://aethers.ru/auth/realms/aether/protocol/openid_connect/userinfo",
+        environ_name="OIDC_OP_USER_ENDPOINT",
+        environ_prefix=None,
+    )
+    OIDC_OP_LOGOUT_ENDPOINT = values.Value(
+        default="https://aethers.ru/auth/realms/aether/protocol/openid_connect/logout",
+        environ_name="OIDC_OP_LOGOUT_ENDPOINT",
+        environ_prefix=None,
+    )
+    OIDC_REDIRECT_REQUIRE_HTTPS = values.BooleanValue(
+        default=True,
+        environ_name="OIDC_REDIRECT_REQUIRE_HTTPS",
+        environ_prefix=None,
+    )
+    OIDC_REDIRECT_ALLOWED_HOSTS = values.ListValue(
+        default=["aethers.ru", "aetherhelp.store"],
+        environ_name="OIDC_REDIRECT_ALLOWED_HOSTS",
+        environ_prefix=None,
+    )
+    LOGIN_REDIRECT_URL = values.Value(
+        default="https://aethers.ru/",
+        environ_name="LOGIN_REDIRECT_URL",
+        environ_prefix=None,
+    )
+    LOGIN_REDIRECT_URL_FAILURE = values.Value(
+        default="https://aethers.ru/auth/login/",
+        environ_name="LOGIN_REDIRECT_URL_FAILURE",
+        environ_prefix=None,
+    )
+    LOGOUT_REDIRECT_URL = values.Value(
+        default="https://aethers.ru/",
+        environ_name="LOGOUT_REDIRECT_URL",
+        environ_prefix=None,
+    )
 
 
 class Feature(Production):

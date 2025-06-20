@@ -1,3 +1,0 @@
-POSTGRES_DB=keycloak_aether
-POSTGRES_USER=keycloak_user
-POSTGRES_PASSWORD=keycloak_strong_password_2025 
