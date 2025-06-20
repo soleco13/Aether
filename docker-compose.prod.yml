@@ -3,24 +3,60 @@ name: aether-prod
 services:
   postgresql:
     image: postgres:16
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
-      interval: 1s
-      timeout: 2s
-      retries: 300
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
-      POSTGRES_DB: impress
-      POSTGRES_USER: impress
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_prod_password_change_this}
+      POSTGRES_DB: aether
+      POSTGRES_USER: aether
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
+    networks:
+      - aether_network
 
   redis:
-    image: redis:5
+    image: redis:7-alpine
+    restart: unless-stopped
     volumes:
       - redis_data:/data
+    networks:
+      - aether_network
+
+  minio:
+    image: minio/minio
     restart: unless-stopped
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    entrypoint: ""
+    command: minio server --console-address :9001 /data
+    volumes:
+      - minio_data:/data
+    networks:
+      - aether_network
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+      /usr/bin/mc alias set aether http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} && \
+      /usr/bin/mc mb aether/aether-media-storage && \
+      /usr/bin/mc version enable aether/aether-media-storage && \
+      exit 0;"
+    networks:
+      - aether_network
 
   app:
     build:
@@ -28,40 +64,73 @@ services:
       target: backend-production
       args:
         DOCKER_USER: 1000
+    restart: unless-stopped
     image: aether:backend-production
     environment:
       - DJANGO_CONFIGURATION=Production
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-change_this_secret_key_in_production}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - DB_HOST=postgresql
-      - DB_NAME=impress
-      - DB_USER=impress
-      - DB_PASSWORD=${POSTGRES_PASSWORD:-secure_prod_password_change_this}
+      - DB_NAME=aether
+      - DB_USER=aether
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
       - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/1
       - REDIS_SESSION_URL=redis://redis:6379/2
       - ALLOWED_HOSTS=aethers.ru,aetherhelp.store,45.146.166.126,localhost
-      - CSRF_TRUSTED_ORIGINS=https://aethers.ru,https://aetherhelp.store,http://45.146.166.126:8071
-      - CORS_ALLOW_ALL_ORIGINS=false
+      - CSRF_TRUSTED_ORIGINS=https://aethers.ru,https://aetherhelp.store,http://45.146.166.126
       - CORS_ALLOWED_ORIGINS=https://aethers.ru,https://aetherhelp.store
+      - AWS_S3_ENDPOINT_URL=http://minio:9000
+      - AWS_S3_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - AWS_S3_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - AWS_STORAGE_BUCKET_NAME=aether-media-storage
       - SECURE_SSL_REDIRECT=true
       - SECURE_PROXY_SSL_HEADER=HTTP_X_FORWARDED_PROTO,https
       - SESSION_COOKIE_SECURE=true
       - CSRF_COOKIE_SECURE=true
-      - SESSION_COOKIE_DOMAIN=.aethers.ru
-      - LANGUAGE_COOKIE_NAME=aether_language
+      - OIDC_OP_JWKS_ENDPOINT=https://aethers.ru/auth/realms/aether/protocol/openid-connect/certs
+      - OIDC_OP_AUTHORIZATION_ENDPOINT=https://aethers.ru/auth/realms/aether/protocol/openid-connect/auth
+      - OIDC_OP_TOKEN_ENDPOINT=https://aethers.ru/auth/realms/aether/protocol/openid-connect/token
+      - OIDC_OP_USER_ENDPOINT=https://aethers.ru/auth/realms/aether/protocol/openid-connect/userinfo
+      - OIDC_OP_LOGOUT_ENDPOINT=https://aethers.ru/auth/realms/aether/protocol/openid-connect/logout
+      - OIDC_RP_CLIENT_SECRET=${OIDC_CLIENT_SECRET}
+      - LOGIN_REDIRECT_URL=https://aethers.ru
+      - LOGIN_REDIRECT_URL_FAILURE=https://aethers.ru
+      - LOGOUT_REDIRECT_URL=https://aethers.ru
     volumes:
       - static_data:/data/static
       - media_data:/data/media
     depends_on:
       postgresql:
         condition: service_healthy
-        restart: true
       redis:
         condition: service_started
+      createbuckets:
+        condition: service_completed_successfully
+    networks:
+      - aether_network
+
+  celery:
+    image: aether:backend-production
     restart: unless-stopped
+    command: ["celery", "-A", "impress.celery_app", "worker", "-l", "INFO"]
+    environment:
+      - DJANGO_CONFIGURATION=Production
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DB_HOST=postgresql
+      - DB_NAME=aether
+      - DB_USER=aether
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - REDIS_URL=redis://redis:6379/1
+    volumes:
+      - static_data:/data/static
+      - media_data:/data/media
+    depends_on:
+      - app
+    networks:
+      - aether_network
 
   frontend:
-    build: 
+    build:
       context: .
       dockerfile: ./src/frontend/Dockerfile
       target: impress-production
@@ -70,65 +139,92 @@ services:
         NEXT_PUBLIC_API_ORIGIN: "https://aethers.ru"
         PUBLISH_AS_MIT: "false"
         SW_DEACTIVATED: "false"
-    image: aether:frontend-production
-    environment:
-      - NEXT_PUBLIC_API_ORIGIN=https://aethers.ru
-      - API_ORIGIN=https://aethers.ru
-      - PORT=3000
     restart: unless-stopped
-
-  nginx:
-    image: nginx:1.25
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./docker/nginx/prod.conf:/etc/nginx/conf.d/default.conf:ro
-      - static_data:/data/static:ro
-      - media_data:/data/media:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+    image: aether:frontend-production
     depends_on:
       - app
-      - frontend
+    networks:
+      - aether_network
+
+  y-provider:
+    build:
+      context: .
+      dockerfile: ./src/frontend/servers/y-provider/Dockerfile
+      target: y-provider-production
     restart: unless-stopped
+    image: aether:y-provider-production
+    environment:
+      - NODE_ENV=production
+      - Y_PROVIDER_API_KEY=${Y_PROVIDER_API_KEY}
+    networks:
+      - aether_network
 
   keycloak:
     image: quay.io/keycloak/keycloak:20.0.1
+    restart: unless-stopped
     volumes:
       - ./docker/auth/realm.json:/opt/keycloak/data/import/realm.json
       - ./docker/keycloak-themes/aether:/opt/keycloak/themes/aether
+      - keycloak_data:/opt/keycloak/data
     command:
       - start
-      - --features=preview
       - --import-realm
       - --proxy=edge
-      - --hostname-url=https://aethers.ru
-      - --hostname-admin-url=https://aethers.ru/auth/admin/
-      - --hostname-strict=false
+      - --hostname=aethers.ru
+      - --hostname-path=/auth
+      - --hostname-admin-url=https://aethers.ru/auth/
+      - --hostname-strict=true
+      - --hostname-strict-https=true
       - --health-enabled=true
       - --metrics-enabled=true
     healthcheck:
       test: ["CMD", "curl", "--head", "-fsS", "http://localhost:8080/health/ready"]
-      interval: 1s
-      timeout: 2s
-      retries: 300
+      interval: 30s
+      timeout: 10s
+      retries: 3
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin_change_this}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgresql:5432/impress
-      KC_DB_USERNAME: impress
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-secure_prod_password_change_this}
-      KC_HOSTNAME: aethers.ru
-      KC_HOSTNAME_STRICT: false
-      KC_HTTP_ENABLED: false
+      KC_DB_URL: jdbc:postgresql://postgresql:5432/aether
+      KC_DB_USERNAME: aether
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
       KC_PROXY: edge
+      KC_HTTP_ENABLED: true
+      KC_HOSTNAME_STRICT_HTTPS: false
     depends_on:
-      - postgresql
+      postgresql:
+        condition: service_healthy
+    networks:
+      - aether_network
+
+  nginx:
+    image: nginx:1.25-alpine
     restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./docker/ssl:/etc/nginx/ssl:ro
+      - static_data:/var/www/static:ro
+      - media_data:/var/www/media:ro
+    depends_on:
+      - app
+      - frontend
+      - keycloak
+    networks:
+      - aether_network
 
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
+  keycloak_data:
   static_data:
-  media_data: 
+  media_data:
+
+networks:
+  aether_network:
+    driver: bridge 

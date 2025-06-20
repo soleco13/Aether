@@ -44,11 +44,6 @@ env.d/development/*
 !env.d/development/*.dist
 env.d/terraform
 
-# Production secrets - НЕ коммитить в git!
-env.d/production/common
-.env.production
-.env.prod
-
 # npm
 node_modules
 
